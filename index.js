@@ -36,7 +36,7 @@ bot.on('message', (msg) => {
   if (scheduleData[groupNumber]) {
     // Загружаем номер недели
     let weekCounter = JSON.parse(fs.readFileSync('weekCounter.json', 'utf-8'));
-    const isUpperWeek = weekCounter === 0; // Верхняя неделя, если 0, нижняя — если 1
+    const isUpperWeek = weekCounter === 0; // Нижняя неделя, если 0, верхняя — если 1
 
     const correctDay = moment().locale('ru').format('dddd'); // Текущий день недели на русском
     const currentDay = correctDay[0].toUpperCase() + correctDay.slice(1);
@@ -47,15 +47,17 @@ bot.on('message', (msg) => {
       const groupSchedule = scheduleData[groupNumber][currentDay];
 
       if (groupSchedule && groupSchedule.length > 0) {
-        let scheduleMessage = `Расписание на ${currentDay} для группы ${numberGroup} (Неделя: ${isUpperWeek ? 'Верхняя' : 'Нижняя'}):\n\n`;
+        let scheduleMessage = `Расписание на ${currentDay} для группы ${numberGroup} (Неделя: ${isUpperWeek ? 'Нижняя' : 'Верхняя'}):\n\n`;
         let hasClasses = false; // Флаг для отслеживания наличия занятий
 
         groupSchedule.forEach((subject, index) => {
-          // Добавляем только нечетные или четные пары в зависимости от недели
-          if ((isUpperWeek && (index % 2 === 0)) || (!isUpperWeek && (index % 2 !== 0))) {
+          // Добавляем только чётные или нечётные пары в зависимости от недели
+          const lessonNumber = index + 1;
+          const timeSlot = lessonTimes[index];
+
+          // Проверка на верхнюю или нижнюю неделю
+          if ((isUpperWeek && lessonNumber % 2 !== 0) || (!isUpperWeek && lessonNumber % 2 === 0)) {
             if (subject.replace(/,/g, '').trim() !== '') { // Проверка на пустую строку
-              const lessonNumber = Math.floor(index / 2) + 1;
-              const timeSlot = lessonTimes[lessonNumber - 1];
               scheduleMessage += `${lessonNumber}. ${timeSlot} - ${subject}\n`;
               hasClasses = true; // Устанавливаем флаг, если есть занятия
             }
@@ -75,3 +77,4 @@ bot.on('message', (msg) => {
     bot.sendMessage(chatId, 'Группа с таким номером не найдена. Пожалуйста, попробуйте снова.');
   }
 });
+
